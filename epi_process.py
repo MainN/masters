@@ -42,30 +42,22 @@ class EpiProcess():
         self.paramertrs_init(*args, **kwargs)
         self.graph_init()
         self.random_start_sample()
+        self.viz_init()
 
-        if self.viz:
-            self.viz_init(viz)
-
-    def paramertrs_init(self, size, percent, viz=False):
+    def paramertrs_init(self, size, percent):
         #инициализируем параметры процесса
         self.size = size
         self.percent = percent
         self.cummulitive_sum_I = 0
         self.iterations = []
-        self.viz=viz
 
     def graph_init(self):
         #строим configuration_model
         sequence = nx.random_powerlaw_tree_sequence(self.size, tries=5000000)
         self.G = nx.configuration_model(sequence)
 
-    def viz_init(self,viz):
-        #инциализируем необходимое для визуализации распростронения
-        self.fig = None
-        self.axes = None
-        self.pos = nx.spring_layout(self.G)
-        self.gif=[]
-        self.colors = sns.color_palette("hls", 8)
+    def viz_init(self):
+        pass
 
     def random_start_sample(self):
         #Инициализация множеств индивидуумов, изначальной выборки
@@ -105,32 +97,44 @@ class EpiProcess():
             self.recover(x)
 
     def run(self):
-        if self.viz == True:
-            #если включена визуализация
-            while len(self.I) != 0:
-                #добавляем текущую итерацию в список картинок
-                self.gif.append(self.vis_spread_info())
-
-                #добавляем в результирующий список больных на текущий момент
-                self.result.append(len(self.I))
-
-                #проводим следующую итерацию
-                self.iterartion()
-
-            #повторяем для последней итерации
+        #если визуализация выключена
+        while len(self.I) != 0:
+             #добавляем в результирующий список больных на текущий момент
             self.result.append(len(self.I))
+
+            #проводим следующую итерацию
+            self.iterartion()
+
+        #повторяем для последней итерации
+        self.result.append(len(self.I))
+
+
+class EpiProcessVis(EpiProcess):
+
+    def viz_init(self):
+        #инциализируем необходимое для визуализации распростронения
+        self.fig = None
+        self.axes = None
+        self.pos = nx.spring_layout(self.G)
+        self.gif=[]
+        self.colors = sns.color_palette("hls", 8)
+
+    def run(self):
+        #если включена визуализация
+        while len(self.I) != 0:
+            #добавляем текущую итерацию в список картинок
             self.gif.append(self.vis_spread_info())
-        else:
-            #если визуализация выключена
-            while len(self.I) != 0:
-                 #добавляем в результирующий список больных на текущий момент
-                self.result.append(len(self.I))
 
-                #проводим следующую итерацию
-                self.iterartion()
-
-            #повторяем для последней итерации
+            #добавляем в результирующий список больных на текущий момент
             self.result.append(len(self.I))
+
+            #проводим следующую итерацию
+            self.iterartion()
+
+        #повторяем для последней итерации
+        self.result.append(len(self.I))
+        self.gif.append(self.vis_spread_info())
+
     def viz_run(self):
         #метод визуализации распростронения по количеству больных на момент времени
         #получаем из списка результа данные в нужном формате
