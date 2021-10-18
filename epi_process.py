@@ -41,8 +41,8 @@ class EpiProcess():
         #вызываем стартовые инциализаторы
         self.paramertrs_init(*args, **kwargs)
         self.graph_init()
-        self.random_start_sample()
         self.viz_init()
+        self.random_start_sample()
 
     def paramertrs_init(self, size, percent):
         #инициализируем параметры процесса
@@ -111,7 +111,7 @@ class EpiProcess():
             self.iterartion()
 
 
-class EpiProcessVis(EpiProcess):
+class EpiProcessViz(EpiProcess):
 
     def viz_init(self):
         #инциализируем необходимое для визуализации распростронения
@@ -119,7 +119,11 @@ class EpiProcessVis(EpiProcess):
         self.axes = None
         self.pos = nx.spring_layout(self.G)
         self.gif=[]
-        self.colors = sns.color_palette("hls", 8)
+        self.colors = [
+            (0.3, 0.3, 0.5),
+            (0.8, 0.0, 0.0),
+            (0.7, 0.7, 0.7),
+            ]
 
     def record_state(self):
         #добавляем в результирующий список больных на текущий момент
@@ -149,16 +153,25 @@ class EpiProcessVis(EpiProcess):
 
     def vis_spread_info(self):
         #получаем актуальные цвета вершин на текущую итерацию
-        colors = (list([self.colors[0]] * len(self.S)) +
-                  list([self.colors[1]] * len(self.I)) +
-                  list([self.colors[2]] * len(self.R)))
+        # сначали рисуем выздоровевших, затем здоровых, а на самом верхнем слое - больных
+        colors = (list([self.colors[2]] * len(self.R)) +
+                  list([self.colors[0]] * len(self.S)) +
+                  list([self.colors[1]] * len(self.I))
+                  )
 
         #получаем актуальную принадлежность множествам вершин на текущую итерацию
-        nodes = (list(self.S) +
-                 list(self.I) +
-                 list(self.R))
+        nodes = (list(self.R) +
+                 list(self.S) +
+                 list(self.I)
+                 )
 
-        return nodes,colors
+        return nodes, colors
+
+    def show_graph(self):
+        plt.figure(num=1, figsize=(10, 10))
+        nodes, colors = self.vis_spread_info()
+        nx.draw(self.G, pos=self.pos, node_size=20, nodelist=nodes, node_color=colors, edge_color=(0, 0, 0, 0.3))
+        plt.show()
 
     def update(self,num):
         #рисуем актуальный граф на итерацию Num
