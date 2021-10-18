@@ -30,10 +30,10 @@ class EpiProcess():
         #вызываем стартовые инциализаторы
         self.paramertrs_init(size, percent, viz)
 
-        self.graph_init()  
+        self.graph_init()
 
         self.random_start_sample()
-        
+
         if self.viz:
             self.viz_init(viz)
 
@@ -69,13 +69,13 @@ class EpiProcess():
         #Заражаем изначальный процент
         while len(self.I)<self.start_sample_size:
             self.infect(random.randint(0, self.size))
-        
+
     def infect(self, x):
         #Заражаем конкретного индивиидума путём перемещения его из множества
         self.S.discard(x)
         if not x in self.R:
             self.I.add(x)
-        
+
     def recover(self, x):
         #Конкретный индивидуум переболел перемещаем его в множество переболевших
         self.I.discard(x)
@@ -85,7 +85,7 @@ class EpiProcess():
         #метод заражения соседей
         for neigh in self.G.neighbors(x):
                 self.infect(neigh)
-        
+
     def iterartion(self):
         #метод итерации в графе
         #создаем копию больных что бы ничего не испортить
@@ -95,7 +95,7 @@ class EpiProcess():
         for x in self.tmp:
             self.infect_neigh(x)
             self.recover(x)
-        
+
     def run(self):
         if self.viz == True:
             #если включена визуализация
@@ -109,7 +109,7 @@ class EpiProcess():
                 #проводим следующую итерацию
                 self.iterartion()
 
-            #повторяем для последней итерации    
+            #повторяем для последней итерации
             self.result.append(len(self.I))
             self.gif.append(self.vis_spread_info())
         else:
@@ -119,9 +119,9 @@ class EpiProcess():
                 self.result.append(len(self.I))
 
                 #проводим следующую итерацию
-                self.iterartion() 
+                self.iterartion()
 
-            #повторяем для последней итерации      
+            #повторяем для последней итерации
             self.result.append(len(self.I))
     def viz_run(self):
         #метод визуализации распростронения по количеству больных на момент времени
@@ -140,18 +140,18 @@ class EpiProcess():
         sns.displot(degrees)
 
     def plot_degree_dist_neigh(self):
-        #получаем график распредления среднего количества соседей среди сосдеей для каждой вершины графа 
+        #получаем график распредления среднего количества соседей среди сосдеей для каждой вершины графа
         sns.displot(nx.average_neighbor_degree(self.G))
 
     def vis_spread_info(self):
         #получаем актуальные цвета вершин на текущую итерацию
-        colors = (list([self.colors[0]] * len(self.S)) + 
-        list([self.colors[1]] * len(self.I)) + 
+        colors = (list([self.colors[0]] * len(self.S)) +
+        list([self.colors[1]] * len(self.I)) +
         list([self.colors[2]] * len(self.R)))
 
         #получаем актуальную принадлежность множествам вершин на текущую итерацию
         nodes = (list(self.S) +
-                 list(self.I) + 
+                 list(self.I) +
                  list(self.R))
 
         return nodes,colors
