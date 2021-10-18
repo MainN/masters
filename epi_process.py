@@ -180,3 +180,8 @@ class EpiProcess():
         #рисуем
         sns.jointplot(x,y)
 
+
+if __name__ == '__main__':
+    ep = EpiProcess(size=1000, percent=1)
+    ep.run()
+    print(ep.result)
