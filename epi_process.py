@@ -7,43 +7,53 @@ Original file is located at
     https://colab.research.google.com/drive/1O4maIOx-pZT2PmR5kl84M-LpCtq34x7T
 """
 
-from google.colab import drive
-drive.mount('/content/gdrive')
-import sys
-sys.path.append('/content/gdrive/MyDrive')
+try:
+    from google.colab import drive
+    drive.mount('/content/gdrive')
+    import sys
+    sys.path.append('/content/gdrive/MyDrive')
+except ImportError:
+    pass
+
+
+import random
 
 import networkx as nx
 import numpy as np
-import random
 import pandas as pd
 import seaborn as sns
-import epi_process as ep
+
 from matplotlib import pyplot as plt
 import matplotlib
 import matplotlib.animation as animation
-from matplotlib.animation import PillowWriter
 from matplotlib.animation import FuncAnimation
+
+try:
+    from matplotlib.animation import PillowWriter
+except ImportError:
+    pass
+
 sns.set()
 
+
 class EpiProcess():
-    def __init__(self, size, percent, viz=False):
+    def __init__(self, *args, **kwargs):
         #вызываем стартовые инциализаторы
-        self.paramertrs_init(size, percent, viz)
-
+        self.paramertrs_init(*args, **kwargs)
         self.graph_init()
-
         self.random_start_sample()
 
         if self.viz:
             self.viz_init(viz)
 
-    def paramertrs_init(self, size, percent, viz):
+    def paramertrs_init(self, size, percent, viz=False):
         #инициализируем параметры процесса
         self.size = size
         self.percent = percent
         self.cummulitive_sum_I = 0
         self.iterations = []
         self.viz=viz
+
     def graph_init(self):
         #строим configuration_model
         sequence = nx.random_powerlaw_tree_sequence(self.size, tries=5000000)
@@ -72,8 +82,8 @@ class EpiProcess():
 
     def infect(self, x):
         #Заражаем конкретного индивиидума путём перемещения его из множества
-        self.S.discard(x)
-        if not x in self.R:
+        if x in self.S:
+            self.S.discard(x)
             self.I.add(x)
 
     def recover(self, x):
@@ -84,15 +94,13 @@ class EpiProcess():
     def infect_neigh(self, x):
         #метод заражения соседей
         for neigh in self.G.neighbors(x):
-                self.infect(neigh)
+            self.infect(neigh)
 
     def iterartion(self):
         #метод итерации в графе
         #создаем копию больных что бы ничего не испортить
-        self.tmp = self.I.copy()
-
         #для больных заражаем соседей а сам больной восстанавливается
-        for x in self.tmp:
+        for x in self.I.copy():
             self.infect_neigh(x)
             self.recover(x)
 
@@ -146,8 +154,8 @@ class EpiProcess():
     def vis_spread_info(self):
         #получаем актуальные цвета вершин на текущую итерацию
         colors = (list([self.colors[0]] * len(self.S)) +
-        list([self.colors[1]] * len(self.I)) +
-        list([self.colors[2]] * len(self.R)))
+                  list([self.colors[1]] * len(self.I)) +
+                  list([self.colors[2]] * len(self.R)))
 
         #получаем актуальную принадлежность множествам вершин на текущую итерацию
         nodes = (list(self.S) +
@@ -158,8 +166,8 @@ class EpiProcess():
 
     def update(self,num):
         #рисуем актуальный граф на итерацию Num
-
         nx.draw_networkx_nodes(self.G, pos=self.pos, nodelist=self.gif[num][0], node_color=self.gif[num][1])
+
     def viz_joint(self):
         #получаем данные
         neigh=nx.average_neighbor_degree(self.G)
