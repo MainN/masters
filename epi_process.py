@@ -69,8 +69,14 @@ class EpiProcess():
         self.result = []
 
         #Заражаем изначальный процент
-        while len(self.I)<self.start_sample_size:
-            self.infect(random.randint(0, self.size))
+        for x in random.sample(list(self.G), k=self.start_sample_size):
+            self.infect(x)
+
+        self.record_state()
+
+    def record_state(self):
+        #добавляем в результирующий список больных на текущий момент
+        self.result.append(len(self.I))
 
     def infect(self, x):
         #Заражаем конкретного индивиидума путём перемещения его из множества
@@ -96,17 +102,13 @@ class EpiProcess():
             self.infect_neigh(x)
             self.recover(x)
 
+        self.record_state()
+
     def run(self):
         #если визуализация выключена
         while len(self.I) != 0:
-             #добавляем в результирующий список больных на текущий момент
-            self.result.append(len(self.I))
-
             #проводим следующую итерацию
             self.iterartion()
-
-        #повторяем для последней итерации
-        self.result.append(len(self.I))
 
 
 class EpiProcessVis(EpiProcess):
@@ -119,20 +121,10 @@ class EpiProcessVis(EpiProcess):
         self.gif=[]
         self.colors = sns.color_palette("hls", 8)
 
-    def run(self):
-        #если включена визуализация
-        while len(self.I) != 0:
-            #добавляем текущую итерацию в список картинок
-            self.gif.append(self.vis_spread_info())
-
-            #добавляем в результирующий список больных на текущий момент
-            self.result.append(len(self.I))
-
-            #проводим следующую итерацию
-            self.iterartion()
-
-        #повторяем для последней итерации
+    def record_state(self):
+        #добавляем в результирующий список больных на текущий момент
         self.result.append(len(self.I))
+        #добавляем текущую итерацию в список картинок
         self.gif.append(self.vis_spread_info())
 
     def viz_run(self):
