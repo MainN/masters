@@ -1,5 +1,17 @@
+import networkx as nx
+import numpy as np
+import random
+import pandas as pd
+import seaborn as sns
+#import epi_process as ep
+from matplotlib import pyplot as plt
+import matplotlib
+import matplotlib.animation as animation
+from matplotlib.animation import PillowWriter
+from matplotlib.animation import FuncAnimation
+sns.set()
 class SIR():
-    def __init__(self,size,percent,*args, beta, gamma,**kwargs):
+    def __init__(self,size,percent,t,*args, beta, gamma, dt,**kwargs):
     #инициализируем изначальное состояние модели
         self.I = int(size/100*percent)
         self.S = size-self.I
@@ -10,10 +22,13 @@ class SIR():
         self.result_S = []
         self.result_I = []
         self.result_R = []
+        self.dt = dt
+        self.t = t
+        self.steps = round(t/dt)
         
-    def calc(self,times):
+    def calc(self):
         #вычисление 
-        for t in range(0,times):
+        for t in range(0,self.steps):
             #считаем приращения
             ds_dt=self.dS_dt()
             di_dt=self.dI_dt()
@@ -30,19 +45,14 @@ class SIR():
             self.R += dr_dt
           
         #выводим количество индивидуумов в каждой группе
-        print(self.S,self.I,self.R)
+        #print(self.S,self.I,self.R)
         
     def dS_dt(self):
-        #считаем производную для S
-        return -self.beta * self.S * self.I / self.N
-        
+        return (-self.beta * self.S * self.I / self.N) * self.dt
     def dR_dt(self):
-        #считаем производную для R
-        return self.gamma * self.I
-        
+        return self.gamma * self.I*self.dt
     def dI_dt(self):
-        ##считаем производную для I
-        return self.beta * self.S * self.I / self.N - self.gamma * self.I
+        return (self.beta * self.S * self.I / self.N - self.gamma * self.I)*self.dt
         
     def viz(self):
         #Собираем в табличку полученные списки прирощений

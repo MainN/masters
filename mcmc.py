@@ -1,8 +1,23 @@
+import networkx as nx
+import numpy as np
+import random
+import pandas as pd
+import seaborn as sns
+#import epi_process as ep
+from matplotlib import pyplot as plt
+import matplotlib
+import matplotlib.animation as animation
+from matplotlib.animation import PillowWriter
+from matplotlib.animation import FuncAnimation
+sns.set()
+import tensorflow as tf
+import tensorflow_probability as tfp
+import SIR_model as SIR
 class MCMC():
     def __init__(self, beta,gamma, warmup,yes,*args, **kwargs):
         self.beta = beta
         self.gamma = gamma
-        self.model = SIR(1000,1,100,beta=self.beta,gamma=self.gamma,dt=4)
+        self.model = SIR.SIR(1000,1,100,beta=self.beta,gamma=self.gamma,dt=4)
         self.x = [self.beta, self.gamma]
         self.yes = yes
     def log_likelihood(self,x,y):
@@ -19,10 +34,10 @@ class MCMC():
         self.result = []
         for i in range(0,iter):
             x_new = self.proposal(self.x)
-            self.model = SIR(1000,1,100,beta = self.x[0],gamma = self.x[1],dt=4)
+            self.model = SIR.SIR(1000,1,100,beta = self.x[0],gamma = self.x[1],dt=4)
             data_old = self.model.get_results()[:10]
             
-            self.model = SIR(1000,1,100,beta=x_new[0],gamma=x_new[1],dt=4)
+            self.model = SIR.SIR(1000,1,100,beta=x_new[0],gamma=x_new[1],dt=4)
             
             data_new = self.model.get_results()[:10]
             

@@ -7,13 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1O4maIOx-pZT2PmR5kl84M-LpCtq34x7T
 """
 
-try:
-    from google.colab import drive
-    drive.mount('/content/gdrive')
-    import sys
-    sys.path.append('/content/gdrive/MyDrive')
-except ImportError:
-    pass
+
 
 
 import random
@@ -44,13 +38,13 @@ class EpiProcess():
         self.viz_init()
         self.random_start_sample()
 
-    def paramertrs_init(self, size, percent):
+    def paramertrs_init(self, size, percent,viz):
         #инициализируем параметры процесса
         self.size = size
         self.percent = percent
         self.cummulitive_sum_I = 0
         self.iterations = []
-
+        self.viz=viz
     def graph_init(self):
         #строим configuration_model
         sequence = nx.random_powerlaw_tree_sequence(self.size, tries=5000000)
