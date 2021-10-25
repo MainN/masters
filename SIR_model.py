@@ -52,3 +52,13 @@ class SIR():
                columns =['S', 'I','R'])
         #возвращаем визуализацию
         return (sns.lineplot(data=df))
+    def set_params(self,params):
+        self.beta=params[0]
+        self.gamma=params[1]
+        
+        #print(self.beta,self.gamma)
+    def get_results(self):
+        
+        self.calc()
+        #print((self.beta,self.gamma),self.result_S)
+        return [abs(x) for x in self.result_S]
