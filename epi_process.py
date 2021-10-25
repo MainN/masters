@@ -41,31 +41,23 @@ class EpiProcess():
         #вызываем стартовые инциализаторы
         self.paramertrs_init(*args, **kwargs)
         self.graph_init()
+        self.viz_init()
         self.random_start_sample()
 
-        if self.viz:
-            self.viz_init(viz)
-
-    def paramertrs_init(self, size, percent, viz=False):
+    def paramertrs_init(self, size, percent):
         #инициализируем параметры процесса
         self.size = size
         self.percent = percent
         self.cummulitive_sum_I = 0
         self.iterations = []
-        self.viz=viz
 
     def graph_init(self):
         #строим configuration_model
         sequence = nx.random_powerlaw_tree_sequence(self.size, tries=5000000)
         self.G = nx.configuration_model(sequence)
 
-    def viz_init(self,viz):
-        #инциализируем необходимое для визуализации распростронения
-        self.fig = None
-        self.axes = None
-        self.pos = nx.spring_layout(self.G)
-        self.gif=[]
-        self.colors = sns.color_palette("hls", 8)
+    def viz_init(self):
+        pass
 
     def random_start_sample(self):
         #Инициализация множеств индивидуумов, изначальной выборки
@@ -77,8 +69,14 @@ class EpiProcess():
         self.result = []
 
         #Заражаем изначальный процент
-        while len(self.I)<self.start_sample_size:
-            self.infect(random.randint(0, self.size))
+        for x in random.sample(list(self.G), k=self.start_sample_size):
+            self.infect(x)
+
+        self.record_state()
+
+    def record_state(self):
+        #добавляем в результирующий список больных на текущий момент
+        self.result.append(len(self.I))
 
     def infect(self, x):
         #Заражаем конкретного индивиидума путём перемещения его из множества
@@ -104,33 +102,35 @@ class EpiProcess():
             self.infect_neigh(x)
             self.recover(x)
 
+        self.record_state()
+
     def run(self):
-        if self.viz == True:
-            #если включена визуализация
-            while len(self.I) != 0:
-                #добавляем текущую итерацию в список картинок
-                self.gif.append(self.vis_spread_info())
+        #если визуализация выключена
+        while len(self.I) != 0:
+            #проводим следующую итерацию
+            self.iterartion()
 
-                #добавляем в результирующий список больных на текущий момент
-                self.result.append(len(self.I))
 
-                #проводим следующую итерацию
-                self.iterartion()
+class EpiProcessViz(EpiProcess):
 
-            #повторяем для последней итерации
-            self.result.append(len(self.I))
-            self.gif.append(self.vis_spread_info())
-        else:
-            #если визуализация выключена
-            while len(self.I) != 0:
-                 #добавляем в результирующий список больных на текущий момент
-                self.result.append(len(self.I))
+    def viz_init(self):
+        #инциализируем необходимое для визуализации распростронения
+        self.fig = None
+        self.axes = None
+        self.pos = nx.spring_layout(self.G)
+        self.gif=[]
+        self.colors = [
+            (0.3, 0.3, 0.5),
+            (0.8, 0.0, 0.0),
+            (0.7, 0.7, 0.7),
+            ]
 
-                #проводим следующую итерацию
-                self.iterartion()
+    def record_state(self):
+        #добавляем в результирующий список больных на текущий момент
+        self.result.append(len(self.I))
+        #добавляем текущую итерацию в список картинок
+        self.gif.append(self.vis_spread_info())
 
-            #повторяем для последней итерации
-            self.result.append(len(self.I))
     def viz_run(self):
         #метод визуализации распростронения по количеству больных на момент времени
         #получаем из списка результа данные в нужном формате
@@ -153,16 +153,25 @@ class EpiProcess():
 
     def vis_spread_info(self):
         #получаем актуальные цвета вершин на текущую итерацию
-        colors = (list([self.colors[0]] * len(self.S)) +
-                  list([self.colors[1]] * len(self.I)) +
-                  list([self.colors[2]] * len(self.R)))
+        # сначали рисуем выздоровевших, затем здоровых, а на самом верхнем слое - больных
+        colors = (list([self.colors[2]] * len(self.R)) +
+                  list([self.colors[0]] * len(self.S)) +
+                  list([self.colors[1]] * len(self.I))
+                  )
 
         #получаем актуальную принадлежность множествам вершин на текущую итерацию
-        nodes = (list(self.S) +
-                 list(self.I) +
-                 list(self.R))
+        nodes = (list(self.R) +
+                 list(self.S) +
+                 list(self.I)
+                 )
 
-        return nodes,colors
+        return nodes, colors
+
+    def show_graph(self):
+        plt.figure(num=1, figsize=(10, 10))
+        nodes, colors = self.vis_spread_info()
+        nx.draw(self.G, pos=self.pos, node_size=20, nodelist=nodes, node_color=colors, edge_color=(0, 0, 0, 0.3))
+        plt.show()
 
     def update(self,num):
         #рисуем актуальный граф на итерацию Num
