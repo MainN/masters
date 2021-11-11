@@ -67,10 +67,31 @@ class SIR():
         self.gamma=params[1]
         
         #print(self.beta,self.gamma)
-    def get_results(self):
+    def get_results(self,xes):
         
         self.calc()
+        self.result_S = self.normalize(xes)
         #print((self.beta,self.gamma),self.result_S)
         return [abs(x) for x in self.result_S]
     def get_R0(self):
         return self.beta/self.gamma
+    def normalize(self,lst):
+        pos=-1
+        for x in range(0,len(self.result_S)):
+            if self.result_S[x]>-1:
+                pos=x
+                break
+        nrm_pos = len(lst)
+        pairs = pos-nrm_pos
+        self.res = self.result_S[:pos]
+        while len(self.res)>2*nrm_pos:
+            tmp_list=[]
+            for x in range(0,int(pos/2)-1):
+                tmp_list.append(self.res[x*2]+self.res[x*2+1])
+            self.res=tmp_list
+            pos=int(pos/2)
+        tmp_list=[]
+        for x in range(0,len(self.res)-nrm_pos):
+            tmp_list.append(self.res[x*2]+self.res[x*2+1])
+        
+        return [*tmp_list,*self.res[(2*len(tmp_list)):]]
