@@ -182,7 +182,8 @@ class EpiProcessViz(EpiProcess):
 
         #рисуем
         sns.jointplot(x,y)
-
+    def graph_degree(self):
+        return (sum(dict(self.G.degree()).values())/len(self.G))-1
 
 if __name__ == '__main__':
     ep = EpiProcess(size=1000, percent=1)

@@ -72,3 +72,5 @@ class SIR():
         self.calc()
         #print((self.beta,self.gamma),self.result_S)
         return [abs(x) for x in self.result_S]
+    def get_R0(self):
+        return self.beta/self.gamma
