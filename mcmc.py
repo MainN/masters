@@ -36,11 +36,11 @@ class MCMC():
         for i in range(0,iter):
             x_new = self.proposal(self.x)
             self.model = SIR.SIR(1000,1,100,beta = self.x[0],gamma = self.x[1],dt=4)
-            data_old = self.model.get_results()[:10]
+            data_old = self.model.get_results(self.yes)
             
             self.model = SIR.SIR(1000,1,100,beta=x_new[0],gamma=x_new[1],dt=4)
             
-            data_new = self.model.get_results()[:10]
+            data_new = self.model.get_results(self.yes)
             
             log_lik_x = self.sum_log_likelihood(data_old,self.yes)
             log_lik_x_new = self.sum_log_likelihood(data_new,self.yes)
