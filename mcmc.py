@@ -14,10 +14,14 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import SIR_model as SIR
 class MCMC():
-    def __init__(self, beta,gamma, warmup,yes,*args, **kwargs):
+    def __init__(self, size,percent,t, warmup,yes,*args,beta,gamma, dt, **kwargs):
         self.beta = beta
         self.gamma = gamma
-        self.model = SIR.SIR(1000,1,100,beta=self.beta,gamma=self.gamma,dt=4)
+        self.size = size
+        self.percent = percent
+        self.t = t
+        self.dt = dt
+        self.model = SIR.SIR(self.size,self.percent,self.t,beta=self.beta,gamma=self.gamma,dt=self.dt)
         self.x = [self.beta, self.gamma]
         self.yes = yes
         self.reject=[]
@@ -35,10 +39,10 @@ class MCMC():
         self.result = []
         for i in range(0,iter):
             x_new = self.proposal(self.x)
-            self.model = SIR.SIR(1000,1,100,beta = self.x[0],gamma = self.x[1],dt=4)
+            self.model = SIR.SIR(self.size,self.percent,self.t,beta = self.x[0],gamma = self.x[1],dt=self.dt)
             data_old = self.model.get_results(self.yes)
             
-            self.model = SIR.SIR(1000,1,100,beta=x_new[0],gamma=x_new[1],dt=4)
+            self.model = SIR.SIR(self.size,self.percent,self.t,beta=x_new[0],gamma=x_new[1],dt=self.dt)
             
             data_new = self.model.get_results(self.yes)
             
