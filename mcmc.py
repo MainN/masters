@@ -1,32 +1,23 @@
 import networkx as nx
 import numpy as np
 import random
-import pandas as pd
-import seaborn as sns
-#import epi_process as ep
-from matplotlib import pyplot as plt
-import matplotlib
-import matplotlib.animation as animation
-from matplotlib.animation import PillowWriter
-from matplotlib.animation import FuncAnimation
-sns.set()
 import tensorflow as tf
 import tensorflow_probability as tfp
 import SIR_model as SIR
 
 
 class MCMC():
-    def __init__(self, size,percent,t, warmup, pseudodata, *args,beta,gamma, dt, **kwargs):
+    def __init__(self, size, percent, t, warmup, pseudodata, beta_0, gamma_0, dt):
+        # set initial values
         self.beta = beta
         self.gamma = gamma
-        self.size = size
-        self.percent = percent
-        self.t = t
-        self.dt = dt
-        self.model = SIR.SIR(self.size,self.percent,self.t,beta=self.beta,gamma=self.gamma,dt=self.dt)
         self.x = [self.beta, self.gamma]
+
+        # set up the model
+        self.model_settings = dict(size=size, percent=percent, dt=dt, t=t)
+        self.model = SIR.SIR(beta=self.beta, gamma=self.gamma, **self.model_settings)
+
         self.pseudodata = np.array(pseudodata)
-        self.reject=[]
 
     def log_likelihood(self, k, l):
         # possion distribution is defined as
@@ -37,7 +28,7 @@ class MCMC():
         return x*np.log(l) - l
 
     def sum_log_likelihood(self, xes):
-        if not len(xes)==len(yes):
+        if len(xes) != len(self.pseudodata):
             raise Exception("Diff sizes")
 
         # likelihood can be parralelized with numpy arrays
@@ -48,12 +39,12 @@ class MCMC():
 
     def run(self,iter):
         self.result = []
-        for i in range(0,iter):
+        for i in range(iter):
             x_new = self.proposal(self.x)
-            self.model = SIR.SIR(self.size,self.percent,self.t,beta = self.x[0],gamma = self.x[1],dt=self.dt)
+            self.model = SIR.SIR(beta=self.x[0], gamma=self.x[1], **self.model_settings)
             data_old = self.model.get_results(self.yes)
 
-            self.model = SIR.SIR(self.size,self.percent,self.t,beta=x_new[0],gamma=x_new[1],dt=self.dt)
+            self.model = SIR.SIR(beta=x_new[0], gamma=x_new[1], **self.model_settings)
 
             data_new = self.model.get_results(self.yes)
 
