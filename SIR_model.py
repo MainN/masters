@@ -75,6 +75,12 @@ class SIR():
         self.result_S = self.normalize(xes)
         #print((self.beta,self.gamma),self.result_S)
         return [abs(x) for x in self.result_S]
+    def get_results_2(self):
+        self.calc()
+        t = 0
+        ipt = int(1/self.dt)  # iteration per time unit
+        return [-sum(self.result_S[t:t+ipt]) for t in range(0, self.steps, ipt)]
+
     def get_R0(self):
         return self.beta/self.gamma
 
@@ -96,5 +102,10 @@ class SIR():
         tmp_list=[]
         for x in range(0,len(self.res)-nrm_pos):
             tmp_list.append(self.res[x*2]+self.res[x*2+1])
-        
+
         return [*tmp_list,*self.res[(2*len(tmp_list)):]]
+
+
+if __name__ == '__main__':
+    sir = SIR(size=1000, percent=1, t=10, beta=2, gamma=1, dt=0.1)
+    print(sir.get_results_2())
