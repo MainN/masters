@@ -36,7 +36,9 @@ class MCMC():
         return [abs(random.normal(mu, 0.001)) for mu in x]
 
     def run(self,iter):
-        self.result = []
+        self.result = []         # samples would go here
+        self.extra_result = []   # additional information will go here
+
         # epidemic trajectory and likelihood on the current iteration
         self.model = SIR.SIR(beta=self.x[0], gamma=self.x[1], **self.model_settings)
         cur_tr = self.model.get_results_2()
@@ -56,13 +58,15 @@ class MCMC():
             # applying log transformation to both sides, we age getting
             # -Exp(1) < log(new_likelihood) - log(current_likelihood)
             # where Exp(1) is an exponential distribution
-            if -random.exponential(1) < new_likelihood - cur_likelihood:
+            accept = -random.exponential(1) < new_likelihood - cur_likelihood
+            if accept:
                 self.x = x_new
                 cur_tr = new_tr
                 cur_likelihood = new_likelihood
 
             # record the iteration
             self.result.append(self.x)
+            self.extra_result.append([cur_likelihood, accept])
 
 
 if __name__ == '__main__':
