@@ -16,7 +16,7 @@ import SIR_model as SIR
 
 
 class MCMC():
-    def __init__(self, size,percent,t, warmup,yes,*args,beta,gamma, dt, **kwargs):
+    def __init__(self, size,percent,t, warmup, pseudodata, *args,beta,gamma, dt, **kwargs):
         self.beta = beta
         self.gamma = gamma
         self.size = size
@@ -25,18 +25,23 @@ class MCMC():
         self.dt = dt
         self.model = SIR.SIR(self.size,self.percent,self.t,beta=self.beta,gamma=self.gamma,dt=self.dt)
         self.x = [self.beta, self.gamma]
-        self.yes = yes
+        self.pseudodata = np.array(pseudodata)
         self.reject=[]
 
-    def log_likelihood(self,x,y):
-        return tfp.distributions.Poisson(x).log_prob(y)
+    def log_likelihood(self, k, l):
+        # possion distribution is defined as
+        # poisson(k | λ) = λ**k / k! * exp(-λ)
+        # factors independet from λ are irrelevant for MCMC, remove them:
+        # poisson(k | λ) ∝ λ**k * exp(-λ)
+        # we save time by not computing the factorial
+        return x*np.log(l) - l
 
-    def sum_log_likelihood(self,xes,yes):
-
+    def sum_log_likelihood(self, xes):
         if not len(xes)==len(yes):
-           raise Exception("Diff sizes")
+            raise Exception("Diff sizes")
 
-        return np.sum( [self.log_likelihood (xes[t], yes[t]) for t in range (0, len(xes) ) ] )
+        # likelihood can be parralelized with numpy arrays
+        return self.log_likelihood(k=self.pseudodata, l=np.array(xes)).sum()
 
     def proposal(self,x):
         return [ abs(tfp.distributions.Normal(mu,0.001).sample().numpy()) for mu in x]
@@ -52,8 +57,8 @@ class MCMC():
 
             data_new = self.model.get_results(self.yes)
 
-            log_lik_x = self.sum_log_likelihood(data_old,self.yes)
-            log_lik_x_new = self.sum_log_likelihood(data_new,self.yes)
+            log_lik_x = self.sum_log_likelihood(data_old)
+            log_lik_x_new = self.sum_log_likelihood(data_new)
 
             if log_lik_x_new > log_lik_x:
                 self.x = x_new
