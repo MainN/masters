@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-import random
+from numpy import random
 import tensorflow as tf
 import tensorflow_probability as tfp
 import SIR_model as SIR
@@ -35,31 +35,33 @@ class MCMC():
         return self.log_likelihood(k=self.pseudodata, l=np.array(xes)).sum()
 
     def proposal(self,x):
-        return [ abs(tfp.distributions.Normal(mu,0.001).sample().numpy()) for mu in x]
+        return [abs(random.normal(mu, 0.001)) for mu in x]
 
     def run(self,iter):
         self.result = []
+        # epidemic trajectory and likelihood on the current iteration
+        self.model = SIR.SIR(beta=self.x[0], gamma=self.x[1], **self.model_settings)
+        cur_tr = self.model.get_results(self.pseudodata)
+        cur_likelihood = self.sum_log_likelihood(cur_tr)
+
         for i in range(iter):
+            # sample new parameters
             x_new = self.proposal(self.x)
-            self.model = SIR.SIR(beta=self.x[0], gamma=self.x[1], **self.model_settings)
-            data_old = self.model.get_results(self.yes)
 
+            # calculate new likelihood
             self.model = SIR.SIR(beta=x_new[0], gamma=x_new[1], **self.model_settings)
+            new_tr = self.model.get_results(self.pseudodata)
+            new_likelihood = self.sum_log_likelihood(new_tr)
 
-            data_new = self.model.get_results(self.yes)
-
-            log_lik_x = self.sum_log_likelihood(data_old)
-            log_lik_x_new = self.sum_log_likelihood(data_new)
-
-            if log_lik_x_new > log_lik_x:
+            # new parameter is accepted if
+            # U(0, 1) < new_likelihood / current_likelihood
+            # applying log transformation to both sides, we age getting
+            # -Exp(1) < log(new_likelihood) - log(current_likelihood)
+            # where Exp(1) is an exponential distribution
+            if -random.exponential(1) < new_likelihood - cur_likelihood:
                 self.x = x_new
-                self.result.append(x_new)
-                #print(log_lik_x,log_lik_x_new)
-            else:
-                alpha=tfp.distributions.Uniform(0.,1.).sample().numpy()
-                #print( np.log(alpha),log_lik_x_new-log_lik_x)
-                if  np.log(alpha )< ((log_lik_x_new-log_lik_x)):
-                    self.x = x_new
-                    self.result.append(x_new)
-                else:
-                    self.result.append(self.x)
+                cur_tr = new_tr
+                cur_likelihood = new_likelihood
+
+            # record the iteration
+            self.result.append(self.x)
