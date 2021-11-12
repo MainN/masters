@@ -13,7 +13,7 @@ sns.set()
 
 
 class SIR():
-    def __init__(self,size,percent,t,*args, beta, gamma, dt,**kwargs):
+    def __init__(self, size, percent, t, beta, gamma, dt):
     #инициализируем изначальное состояние модели
         self.I = int(size/100*percent)
         self.S = size-self.I
