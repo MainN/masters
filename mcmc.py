@@ -40,8 +40,7 @@ class MCMC():
         self.extra_result = []   # additional information will go here
 
         # epidemic trajectory and likelihood on the current iteration
-        self.model = SIR.SIR(beta=self.x[0], gamma=self.x[1], **self.model_settings)
-        cur_tr = self.model.get_results_2()
+        cur_tr = self.model.get_results_with_params(self.x)
         cur_likelihood = self.sum_log_likelihood(cur_tr)
 
         for i in range(iter):
@@ -49,8 +48,7 @@ class MCMC():
             x_new = self.proposal(self.x)
 
             # calculate new likelihood
-            self.model = SIR.SIR(beta=x_new[0], gamma=x_new[1], **self.model_settings)
-            new_tr = self.model.get_results_2()
+            new_tr = self.model.get_results_with_params(x_new)
             new_likelihood = self.sum_log_likelihood(new_tr)
 
             # new parameter is accepted if
@@ -67,6 +65,9 @@ class MCMC():
             # record the iteration
             self.result.append(self.x)
             self.extra_result.append([cur_likelihood, accept])
+
+        self.result = np.array(self.result)
+        self.extra_result = np.array(self.extra_result)
 
 
 if __name__ == '__main__':

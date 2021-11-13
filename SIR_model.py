@@ -15,22 +15,28 @@ sns.set()
 class SIR():
     def __init__(self, size, percent, t, beta, gamma, dt):
     #инициализируем изначальное состояние модели
-        self.I = int(size/100*percent)
-        self.S = size-self.I
-        self.R = 0
         self.N = size
+        self.init_percent = percent
         self.beta = beta
         self.gamma = gamma
-        self.result_S = []
-        self.result_I = []
-        self.result_R = []
         self.dt = dt
         self.t = t
         self.steps = round(t/dt)
+        self.init()
+
+    def init(self):
+        """ set model state at t=0"""
+        self.I = int(self.N/100*self.init_percent)
+        self.S = self.N-self.I
+        self.R = 0
+        self.N = self.N
+        self.result_S = []
+        self.result_I = []
+        self.result_R = []
 
     def calc(self):
         #вычисление
-        for t in range(0,self.steps):
+        for t in range(0, self.steps):
             #считаем приращения
             ds_dt=self.dS_dt()
             di_dt=self.dI_dt()
@@ -75,9 +81,11 @@ class SIR():
         self.result_S = self.normalize(xes)
         #print((self.beta,self.gamma),self.result_S)
         return [abs(x) for x in self.result_S]
-    def get_results_2(self):
+
+    def get_results_with_params(self, params):
+        self.set_params(params)
+        self.init()
         self.calc()
-        t = 0
         ipt = int(1/self.dt)  # iteration per time unit
         return [-sum(self.result_S[t:t+ipt]) for t in range(0, self.steps, ipt)]
 
@@ -108,4 +116,4 @@ class SIR():
 
 if __name__ == '__main__':
     sir = SIR(size=1000, percent=1, t=10, beta=2, gamma=1, dt=0.1)
-    print(sir.get_results_2())
+    print(sir.get_results_with_params([2, 1]))
